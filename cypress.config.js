@@ -3,8 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 module.exports = defineConfig({
-  video: true,                      
-  videoUploadOnPasses: false,          
+  video: true,                                
   screenshotOnRunFailure: true,  
   e2e: {
     baseUrl: 'https://parabank.parasoft.com/parabank/',
