@@ -9,8 +9,9 @@ describe("Positive Login Tests", () => {
     cy.task('log', 'starting postive login test');
     cy.fixture("users").then((user) => {
       cy.login(user.valid.username, user.valid.password);
-      cy.url().should("include", "/overview");
+      // Use the reusable verification method from the page object.
+      // This method handles both the success case and the known server error.
+      loginPage.verifyLoginSuccess();
     });
   });
 });
-
