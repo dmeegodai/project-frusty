@@ -1,0 +1,14 @@
+[
+  {
+    "id": 98765,
+    "customerId": 12212,
+    "type": "CHECKING",
+    "balance": 1234.56
+  },
+  {
+    "id": 56789,
+    "customerId": 12212,
+    "type": "SAVINGS",
+    "balance": 9876.54
+  }
+]
