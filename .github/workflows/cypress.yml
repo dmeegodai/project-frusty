@@ -34,14 +34,15 @@ jobs:
         run: npx cypress run
 
       - name: Upload Cypress Screenshots
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: cypress-screenshots
           path: cypress/screenshots
+          if-no-files-found: ignore
 
       - name: Upload Cypress Videos
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name : cypress-videos
