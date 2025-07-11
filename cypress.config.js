@@ -3,6 +3,9 @@ const fs = require('fs');
 const path = require('path');
 
 module.exports = defineConfig({
+  video: true,                      
+  videoUploadOnPasses: false,          
+  screenshotOnRunFailure: true,  
   e2e: {
     baseUrl: 'https://parabank.parasoft.com/parabank/',
     specPattern: "cypress/e2e/**/*.cy.{js,ts}",
