@@ -10,13 +10,14 @@ jobs:
   cypress-run:
     runs-on: ubuntu-latest
     strategy:
-        matrix:
-            folder: [
-                'cypress/e2e/login',
-                'cypress/e2e/signup',
-                'cypress/e2e/api'
-
-            ]
+      matrix:
+        include:
+          - folder: cypress/e2e/login
+            label: login
+          - folder: cypress/e2e/signup
+            label: signup
+          - folder: cypress/e2e/api
+            label: api
 
     steps:
       - name: Checkout code
@@ -26,7 +27,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-     
+
       - name: Cache node modules
         uses: actions/cache@v3
         with:
@@ -45,7 +46,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: screenshots-${{matrix.folder}}
+          name: screenshots-${{matrix.label}}
           path: cypress/screenshots
           if-no-files-found: ignore
 
@@ -53,13 +54,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name : videos-${{matrix.folder}}
+          name: videos-${{matrix.label}}
           path: cypress/videos
-    
-    
-          
-
-         
-
-
-    
