@@ -9,6 +9,14 @@ on:
 jobs:
   cypress-run:
     runs-on: ubuntu-latest
+    strategy:
+        matrix:
+            folder: [
+                'cypress/e2e/login',
+                'cypress/e2e/signup',
+                'cypress/e2e/api'
+
+            ]
 
     steps:
       - name: Checkout code
@@ -31,13 +39,13 @@ jobs:
         run: npm ci
 
       - name: Run Cypress tests
-        run: npx cypress run
+        run: npx cypress run --spec "${{ matrix.folder }}/**/*.cy.js"
 
       - name: Upload Cypress Screenshots
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: cypress-screenshots
+          name: screenshots-${{matrix.folder}}
           path: cypress/screenshots
           if-no-files-found: ignore
 
@@ -45,7 +53,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name : cypress-videos
+          name : videos-${{matrix.folder}}
           path: cypress/videos
     
     

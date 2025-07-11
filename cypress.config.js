@@ -9,7 +9,6 @@ module.exports = defineConfig({
     baseUrl: 'https://parabank.parasoft.com/parabank/',
     specPattern: "cypress/e2e/**/*.cy.{js,ts}",
     excludeSpecPattern: [
-      'cypress/e2e/api/**/*', 
       'cypress/e2e/**/intercept_example.cy.js' 
     ],
     setupNodeEvents(on, config) {
