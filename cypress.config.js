@@ -4,7 +4,14 @@ const path = require('path');
 
 module.exports = defineConfig({
   video: true,                                
-  screenshotOnRunFailure: true,  
+  screenshotOnRunFailure: true, 
+  reporter: 'mochawesome',
+  reporterOptions: {
+    reportDir: 'cypress/reports/mocha',
+    overwrite: false,
+    html: false,
+    json: true
+  },
   e2e: {
     baseUrl: 'https://parabank.parasoft.com/parabank/',
     specPattern: "cypress/e2e/**/*.cy.{js,ts}",
