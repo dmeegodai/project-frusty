@@ -86,11 +86,13 @@ jobs:
         run: npm ci
 
       - name: Merge and Generate HTML Report
-        run: npm run report:merge && npm run report:generate
+        run: |
+          npx mochawesome-merge "cypress/reports/all-mochawesome-reports/*.json" > cypress/reports/report.json
+          npx marge cypress/reports/report.json -f report -o cypress/reports/html-report
 
       - name: Upload Final HTML Report
         uses: actions/upload-artifact@v4
         with:
           name: final-html-report
-          path: cypress/reports
+          path: cypress/reports/html-report
           if-no-files-found: ignore
