@@ -1,4 +1,4 @@
-name: Build, Test, and Deploy
+name: Cypress CI
 
 on:
   push:
@@ -7,44 +7,9 @@ on:
     branches: [main]
 
 jobs:
-  # Job to build the application
-  build-app:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      - name: Cache node modules
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build application
-        run: npm run build # Assumes 'build' script in package.json
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-dist
-          path: dist # Assumes build output is in 'dist' folder
-
-  # Job to run Cypress tests in parallel
   cypress-run:
-    needs: build-app
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false # Keep running other tests even if one matrix job fails
       matrix:
         include:
           - folder: cypress/e2e/login
@@ -74,21 +39,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: app-dist
-          path: dist
-
-      - name: Run Cypress tests against served app
-        uses: cypress-io/github-action@v6
-        with:
-          start: npx serve -s dist
-          wait-on: 'http://localhost:3000'
-          spec: "${{ matrix.folder }}/**/*.cy.js"
-          config: baseUrl=http://localhost:3000
-          # Note: API tests might need a different configuration
-          # if they don't run against the locally served app.
+      - name: Run Cypress tests
+        run: npx cypress run --spec "${{ matrix.folder }}/**/*.cy.js"
 
       - name: Upload Cypress Screenshots
         if: failure()
@@ -113,9 +65,38 @@ jobs:
           path: cypress/reports/mocha
           if-no-files-found: ignore
 
-  # Job to merge reports and deploy the app + report to GitHub Pages
-  deploy-site:
-    needs: [build-app, cypress-run]
+  merge-reports:
+    needs: [cypress-run]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all mochawesome reports
+        uses: actions/download-artifact@v4
+        with:
+          path: cypress/reports/all-mochawesome-reports
+          pattern: mochawesome-report-*
+          merge-multiple: true
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Merge and Generate HTML Report
+        run: |
+          npx mochawesome-merge "cypress/reports/all-mochawesome-reports/*.json" > cypress/reports/report.json
+          npx marge cypress/reports/report.json -f report -o cypress/reports/html-report
+
+      - name: Upload Final HTML Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-html-report
+          path: cypress/reports/html-report
+          if-no-files-found: ignore
+
+  deploy-report:
+    needs: merge-reports
     if: always()
     runs-on: ubuntu-latest
 
@@ -128,32 +109,14 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install dependencies for report merging
-        run: npm ci
-
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: app-dist
-          path: ./_site
-
-      - name: Download all mochawesome reports
-        uses: actions/download-artifact@v4
-        with:
-          path: ./all-mochawesome-reports
-          pattern: mochawesome-report-*
-          merge-multiple: true
-
-      - name: Merge and Generate HTML Report
-        run: |
-          npx mochawesome-merge "all-mochawesome-reports/*.json" > report.json
-          npx marge report.json -f report -o ./_site/report
-
       - name: Setup Pages
         uses: actions/configure-pages@v4
+
+      - name: Download final report artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: final-html-report
+          path: ./_site
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
