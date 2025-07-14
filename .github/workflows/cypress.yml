@@ -66,9 +66,7 @@ jobs:
           if-no-files-found: ignore
 
   merge-reports:
-    # This job runs only after all the parallel cypress-run jobs have finished.
     needs: [cypress-run]
-    # This 'if' condition ensures the report is generated even if some tests fail.
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -96,3 +94,39 @@ jobs:
           name: final-html-report
           path: cypress/reports/html-report
           if-no-files-found: ignore
+
+  deploy-report:
+    # This job runs after the reports are merged
+    needs: merge-reports
+    # Run this job even if previous jobs fail, so we can deploy the report with failure details
+    if: always()
+    runs-on: ubuntu-latest
+
+    # Grant permissions for the GITHUB_TOKEN to deploy to Pages
+    permissions:
+      pages: write
+      id-token: write
+
+    # Specify the deployment environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Download final report artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: final-html-report
+          path: .
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
